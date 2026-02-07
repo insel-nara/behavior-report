@@ -11,20 +11,17 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .card-anim { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .card-anim:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-        .generating { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .card-anim:hover { transform: translateY(-3px); box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.05); }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-6xl mx-auto">
-        <!-- Dashboard Header -->
         <div class="bg-white rounded-[2.5rem] p-8 mb-8 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
                 <h1 class="text-3xl font-black text-slate-900 leading-tight">
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">10만+ 유니크</span><br>행발 조합 엔진 v4.4
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">10만+ 유니크</span><br>행발 조합 엔진 v4.5
                 </h1>
-                <p class="text-slate-500 mt-2 font-medium">부정 표현 순화 및 실시간 개별 관찰 내용 반영 시스템</p>
+                <p class="text-slate-500 mt-2 font-medium">음슴체 종결어미 최적화 및 중복 방지 시스템</p>
             </div>
             <div class="flex flex-wrap gap-3 bg-slate-50 p-4 rounded-3xl border border-slate-100">
                 <div class="flex items-center gap-2 px-3 border-r border-slate-200">
@@ -34,7 +31,6 @@
                         <option value="10">10</option>
                         <option value="20" selected>20</option>
                         <option value="30">30</option>
-                        <option value="35">35</option>
                         <option value="40">40</option>
                     </select>
                 </div>
@@ -42,181 +38,153 @@
                 <button onclick="exportCSV()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2.5 rounded-2xl font-bold transition-all active:scale-95">CSV 추출</button>
             </div>
         </div>
-
-        <!-- Cards Container -->
         <div id="container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </div>
-
-    <!-- Processing Modal -->
     <div id="loader" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex flex-col items-center justify-center z-50">
         <div class="bg-white p-10 rounded-[3rem] shadow-2xl flex flex-col items-center">
             <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-6"></div>
-            <h2 class="text-xl font-black text-slate-800">대규모 조합 연산 중</h2>
-            <p class="text-slate-500 mt-2">개별 관찰 내용 분석 및 문장 재구성 알고리즘 가동 중...</p>
+            <h2 class="text-xl font-black text-slate-800">문장 재구성 중</h2>
+            <p class="text-slate-500 mt-2">어색한 종결 어미 및 중복 표현 필터링 중...</p>
         </div>
     </div>
-
     <script>
-        const REFINEMENT_MAP = [
-            { patterns: ["산만", "집중못함", "떠듦"], replacement: "주변 상황에 민감하게 반응하며 다방면에 왕성한 호기심을 보임" },
-            { patterns: ["소극", "자신감부족", "말수적음"], replacement: "신중한 태도로 상황을 관조하며 내면의 생각을 깊이 있게 정리하는 성찰적 태도를 지님" },
-            { patterns: ["고집", "이기적", "독단"], replacement: "자신의 주관이 뚜렷하고 목표를 향한 의지가 강하여 주도적으로 일을 추진하는 역량이 돋보임" },
-            { patterns: ["공부안함", "성적낮음", "학습의욕부족"], replacement: "현재의 성취보다는 미래의 가능성에 잠재력을 품고 있으며 적절한 동기 부여 시 비약적인 성장이 기대됨" },
-            { patterns: ["싸움", "공격적", "다툼"], replacement: "감정 표현에 솔직하고 활동적인 에너지가 강하여 이를 긍정적인 방향으로 분출할 수 있는 리더십 잠재력을 가짐" },
-            { patterns: ["느림", "지각", "태만"], replacement: "매사에 서두르지 않고 자신만의 속도로 과업을 완수하려는 꼼꼼함과 여유로운 태도를 갖춤" },
-            { patterns: ["불평", "불만"], replacement: "비판적 사고력이 예리하여 현상의 문제점을 파악하는 능력이 있고 이를 개선하려는 의지가 엿보임" }
-        ];
-
+        // 음슴체 최적화 데이터 (중복 방지를 위해 서술어 다양화)
         const ELEMENTS = {
             "공동체": {
-                "adj": ["이타적인 마음으로", "공동체 의식이 남달라", "학급의 화합을 위해", "배려심이 깊고 따뜻하여", "성숙한 시민 의식을 바탕으로", "타인을 존중하는 태도로", "봉사 정신이 투철하여", "화목한 분위기를 위해"],
-                "act": ["소외된 교우를 세심하게 살피며", "어려운 상황을 묵묵히 해결하고", "학교 규칙을 모범적으로 준수하며", "청소 및 환경 정돈에 앞장서고", "웃어른께 예의 바르게 행동하며", "학급 내 갈등 상황을 중재하고"],
-                "res": ["모두의 신뢰를 받는 기둥이 됨", "화합의 매개체 역할을 완벽히 수행함", "긍정적인 에너지를 주변에 전파함", "타의 모범이 되는 생활 습관을 보여줌", "건전한 학급 문화 조성에 크게 기여함"],
-                "end": ["유지함.", "견지함.", "돋보임.", "실천함.", "보여줌."]
+                "adj": ["이타적인 마음으로", "공동체 의식이 남다름.", "학급 화합을 위해 노력함.", "배려심이 깊고 따뜻함.", "성숙한 시민 의식을 갖춤.", "타인을 존중하는 태도를 보임.", "봉사 정신이 투철함.", "화목한 분위기 형성에 기여함."],
+                "act": ["소외된 교우를 세심하게 살핌.", "어려운 상황을 묵묵히 해결함.", "학교 규칙을 모범적으로 준수함.", "환경 정돈에 항상 앞장섬.", "웃어른께 예의 바르게 행동함.", "학급 내 갈등을 지혜롭게 중재함."],
+                "res": ["신뢰를 받는 든든한 기둥임.", "화합의 매개체 역할을 완벽히 수행함.", "긍정적인 에너지를 주변에 전파함.", "타의 모범이 되는 생활 습관을 보여줌.", "건전한 학급 문화 조성에 크게 이바지함."]
             },
             "학습": {
-                "adj": ["지적 호기심이 무척 왕성하여", "자기주도적 역량이 뛰어나", "학구적인 열의가 매우 높아", "분석적 사고력이 탁월하여", "끈기 있는 탐구 자세를 갖추어", "기초가 탄탄하고 집중력이 좋아", "학업적 성취 의욕이 강력하여"],
-                "act": ["수업 시간마다 핵심을 꿰뚫는 질문을 던지고", "자신만의 학습 노하우를 체계화하며", "다양한 도서를 통해 지식의 폭을 확장하고", "어려운 문제도 포기하지 않고 끝까지 연구하며", "교과 간 융합 사고를 실천하고"],
-                "res": ["지속적인 학업 발전을 이끌어냄", "깊이 있는 학문적 통찰력을 발휘함", "미래 성장 가능성이 매우 높음을 보여줌", "사고의 유연성과 논리성을 입증함", "교내 학습 분위기 조성에 긍정적 영향을 줌"],
-                "end": ["기대됨.", "보여줌.", "판단됨.", "나타남.", "탁월함."]
+                "adj": ["지적 호기심이 매우 왕성함.", "자기주도적 역량이 뛰어남.", "학구적인 열의가 상당히 높음.", "분석적 사고력이 탁월함.", "끈기 있는 탐구 자세를 견지함.", "집중력이 좋아 학습 효율이 높음.", "학업적 성취 의욕이 강력함."],
+                "act": ["수업 시간 핵심을 꿰뚫는 질문을 함.", "자신만의 학습 노하우를 체계화함.", "다양한 도서로 지식의 폭을 확장함.", "어려운 문제도 포기하지 않고 연구함.", "교과 간 융합 사고를 몸소 실천함."],
+                "res": ["지속적인 학업 발전을 이끌어냄.", "깊이 있는 학문적 통찰력을 발휘함.", "미래 성장 가능성이 매우 높음.", "사고의 유연성과 논리성을 입증함.", "교내 학습 분위기 형성에 긍정적임."]
             },
             "소통": {
-                "adj": ["개방적인 소통 태도를 지녀", "공감 능력이 매우 우수하여", "협력적인 자세가 몸에 배어", "자신의 의사를 논리적으로 표현하며", "경청의 가치를 잘 알고 있어"],
-                "act": ["모둠 활동 시 팀원들을 조화롭게 이끌고", "반대 의견도 수용하며 합의점을 도출하고", "적극적인 의사표현으로 소통의 창구가 되며", "동료들의 장점을 파악하여 격려하고", "토론 과정에서 합리적인 근거를 제시하며"],
-                "res": ["협동의 시너지를 극대화함", "유연한 대인관계를 형성함", "원만한 조직 운영에 핵심적 역할을 함", "신뢰를 기반으로 한 관계를 구축함", "민주적인 의사결정 과정을 실천함"],
-                "end": ["훌륭함.", "돋보임.", "인상적임.", "실천함.", "발휘함."]
+                "adj": ["개방적인 소통 태도를 지님.", "공감 능력이 매우 우수함.", "협력적인 자세가 몸에 배어 있음.", "의사를 논리적으로 잘 표현함.", "경청의 가치를 깊이 인식함."],
+                "act": ["팀원들을 조화롭게 이끌어 나감.", "반대 의견을 수용하여 합의를 이룸.", "적극적인 의사표현으로 소통함.", "동료들의 장점을 파악하여 격려함.", "토론 시 합리적인 근거를 제시함."],
+                "res": ["협동의 시너지를 극대화함.", "유연한 대인관계를 유지함.", "원만한 조직 운영의 핵심임.", "신뢰를 기반으로 관계를 구축함.", "민주적인 의사결정을 실천함."]
             }
         };
-
+        const REFINEMENT_MAP = [
+            { patterns: ["산만", "집중못함", "떠듦"], replacement: "주변 상황에 민감하고 다방면에 호기심이 많아 활동적임." },
+            { patterns: ["소극", "자신감부족", "말수적음"], replacement: "신중하게 상황을 관조하며 내면의 생각을 정리하는 성찰적 태도를 보임." },
+            { patterns: ["고집", "이기적", "독단"], replacement: "주관이 뚜렷하고 목표 의식이 강해 주도적인 추진력을 갖춤." },
+            { patterns: ["공부안함", "성적낮음", "의욕부족"], replacement: "미래 잠재력이 풍부하며 적절한 동기 부여 시 성장이 매우 기대됨." },
+            { patterns: ["싸움", "공격적", "다툼"], replacement: "에너지가 넘치고 표현이 솔직하여 이를 리더십으로 승화할 가능성이 큼." },
+            { patterns: ["느림", "지각", "태만"], replacement: "자신만의 속도로 과업을 꼼꼼히 완수하려는 여유와 끈기를 지님." }
+        ];
         const KEY_MAP = {
-            "공동체": ["배려", "봉사", "예의", "친구", "화합", "인사", "청소"],
-            "학습": ["수업", "지식", "탐구", "문제", "학업", "공부", "질문"],
-            "소통": ["모둠", "팀", "대화", "경청", "발표", "토론", "의견"]
+            "공동체": ["배려", "봉사", "예의", "친구", "화합"],
+            "학습": ["수업", "지식", "탐구", "문제", "학업"],
+            "소통": ["모둠", "팀", "대화", "경청", "발표"]
         };
-
         function random(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
         function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
-
-        function buildSentence(cat) {
-            const d = ELEMENTS[cat];
-            return `${random(d.adj)} ${random(d.act)} ${random(d.res)} ${random(d.end)}`;
-        }
-
         function refineText(text) {
             let refined = text;
             REFINEMENT_MAP.forEach(item => {
                 item.patterns.forEach(p => {
                     const regex = new RegExp(p, 'gi');
-                    if (regex.test(refined)) {
-                        refined = refined.replace(regex, item.replacement);
-                    }
+                    if (regex.test(refined)) refined = refined.replace(regex, item.replacement);
                 });
             });
+            // 음슴체 변환 시도 (문장의 끝이 다, 요 로 끝나면 함/임으로 변환)
+            refined = refined.replace(/합니다\./g, "함.").replace(/입니다\./g, "임.").replace(/한다\./g, "함.").replace(/이다\./g, "임.");
             return refined;
         }
-
         function createForms() {
             const count = document.getElementById('studentCount').value;
             const container = document.getElementById('container');
             container.innerHTML = '';
             for (let i = 1; i <= count; i++) {
-                const card = document.createElement('div');
-                card.className = "card-anim bg-white rounded-[2rem] p-6 border border-slate-200 animate-fade-in flex flex-col gap-4";
-                card.innerHTML = `
+                container.innerHTML += `
+                <div class="card-anim bg-white rounded-[2rem] p-6 border border-slate-200 flex flex-col gap-4">
                     <div class="flex justify-between items-center">
                         <div class="flex items-center gap-3">
-                            <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black">${i}</span>
-                            <input id="name-${i}" placeholder="이름" class="text-lg font-bold outline-none border-b-2 border-transparent focus:border-blue-400 w-24">
+                            <span class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black">${i}</span>
+                            <input id="name-${i}" placeholder="이름" class="text-lg font-bold outline-none border-b-2 border-transparent focus:border-indigo-400 w-24">
                         </div>
                         <div id="counter-${i}" class="text-[10px] font-black px-2 py-1 rounded-lg bg-slate-100 text-slate-400"><span id="val-${i}">0</span> / 500</div>
                     </div>
-                    <textarea id="obs-${i}" oninput="handleObsInput(${i})" class="w-full h-16 p-3 text-xs bg-slate-50 border border-slate-100 rounded-2xl outline-none resize-none focus:ring-2 focus:ring-blue-100 transition-all custom-scrollbar" placeholder="교사가 개별적으로 관찰한 내용을 추가합니다."></textarea>
+                    <textarea id="obs-${i}" oninput="handleObsInput(${i})" class="w-full h-16 p-3 text-xs bg-slate-50 border border-slate-100 rounded-2xl outline-none resize-none focus:ring-2 focus:ring-indigo-100 transition-all custom-scrollbar" placeholder="교사가 개별적으로 관찰한 내용을 추가합니다."></textarea>
                     <div class="flex gap-2">
-                        <button onclick="generate(${i})" class="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-600 py-2.5 rounded-2xl text-[11px] font-black transition-all">랜덤 다시 조합</button>
+                        <button onclick="generate(${i})" class="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 py-2.5 rounded-2xl text-[11px] font-black transition-all">랜덤 다시 조합</button>
                         <button onclick="copy(${i})" id="copy-${i}" class="px-5 bg-slate-50 text-slate-500 py-2.5 rounded-2xl text-[11px] font-bold hover:bg-slate-200 transition-all">복사</button>
                     </div>
-                    <textarea id="res-${i}" oninput="update(${i})" class="w-full h-44 p-4 text-sm bg-slate-50 border border-slate-100 rounded-2xl outline-none resize-none custom-scrollbar leading-relaxed" placeholder="관찰 내용이 반영된 긍정적인 행발 문장이 여기에 표시됩니다."></textarea>
-                `;
-                container.appendChild(card);
+                    <textarea id="res-${i}" oninput="update(${i})" class="w-full h-44 p-4 text-sm bg-slate-50 border border-slate-100 rounded-2xl outline-none resize-none custom-scrollbar leading-relaxed" placeholder="음슴체로 정제된 행발 문장이 표시됨."></textarea>
+                </div>`;
             }
         }
-
         let inputTimers = {};
         function handleObsInput(id) {
             clearTimeout(inputTimers[id]);
-            inputTimers[id] = setTimeout(() => {
-                generate(id);
-            }, 500);
+            inputTimers[id] = setTimeout(() => generate(id), 500);
         }
-
         function generate(id) {
             const obsField = document.getElementById(`obs-${id}`);
             const resField = document.getElementById(`res-${id}`);
             if(!obsField || !resField) return;
-
             let rawObs = obsField.value.trim();
             let refinedObs = refineText(rawObs);
-            const fObs = refinedObs ? (refinedObs.endsWith('.') ? refinedObs : refinedObs + ".") : "";
-
+            if(refinedObs && !refinedObs.endsWith('.')) refinedObs += ".";
             let target = "학습";
             let maxScore = -1;
-            
             for(let c in KEY_MAP) {
                 let score = 0;
                 KEY_MAP[c].forEach(k => { if(rawObs.includes(k)) score++; });
                 if(score > maxScore) { maxScore = score; target = c; }
             }
-
             let combined = [];
             Object.keys(ELEMENTS).forEach(c => {
-                let s = buildSentence(c);
-                if(c === target && fObs) {
-                    const parts = s.split(' ');
-                    const splitIdx = Math.floor(parts.length / 3);
-                    s = parts.slice(0, splitIdx).join(' ') + " " + fObs + " " + parts.slice(splitIdx).join(' ');
+                const category = ELEMENTS[c];
+                // 각 영역별 중복 방지 로직
+                const adj = random(category.adj);
+                const act = random(category.act);
+                const res = random(category.res);
+                let s = `${adj} ${act} ${res}`;
+                if(c === target && refinedObs) {
+                    const mid = Math.floor(s.split(' ').length / 2);
+                    const words = s.split(' ');
+                    s = words.slice(0, mid).join(' ') + " " + refinedObs + " " + words.slice(mid).join(' ');
                 }
                 combined.push(s);
             });
-
             let final = shuffle(combined).join(" ");
-            
-            while (final.length < 410) {
-                final += " " + buildSentence(random(Object.keys(ELEMENTS)));
+            // 글자 수 보충 시 중복 문장 방지
+            while (final.length < 430) {
+                let extraCat = random(Object.keys(ELEMENTS));
+                let extraSentence = random(ELEMENTS[extraCat].res);
+                if (!final.includes(extraSentence.substring(0, 10))) {
+                    final += " " + extraSentence;
+                }
             }
-
+            // 문장 종결 및 중복 어미 처리
+            final = final.replace(/\.\s\./g, ".").replace(/\s+/g, ' ').trim();
             if (final.length > 500) {
                 final = final.substring(0, 500);
                 const lastDot = final.lastIndexOf('.');
                 final = lastDot > 300 ? final.substring(0, lastDot + 1) : final;
             }
-
-            resField.value = final.replace(/\s+/g, ' ').trim();
+            resField.value = final;
             update(id);
         }
-
         function generateAll() {
             document.getElementById('loader').classList.remove('hidden');
             setTimeout(() => {
                 const count = document.getElementById('studentCount').value;
-                for(let i = 1; i <= count; i++) { generate(i); }
+                for(let i = 1; i <= count; i++) generate(i);
                 document.getElementById('loader').classList.add('hidden');
             }, 800);
         }
-
         function update(id) {
-            const resField = document.getElementById(`res-${id}`);
-            const valSpan = document.getElementById(`val-${id}`);
+            const len = document.getElementById(`res-${id}`).value.length;
+            document.getElementById(`val-${id}`).textContent = len;
             const badge = document.getElementById(`counter-${id}`);
-            if(!resField || !valSpan || !badge) return;
-
-            const len = resField.value.length;
-            valSpan.textContent = len;
-
             if(len >= 500) badge.className = "text-[10px] font-black px-2 py-1 rounded-lg bg-red-500 text-white";
-            else if(len >= 400) badge.className = "text-[10px] font-black px-2 py-1 rounded-lg bg-blue-600 text-white";
+            else if(len >= 400) badge.className = "text-[10px] font-black px-2 py-1 rounded-lg bg-indigo-600 text-white";
             else badge.className = "text-[10px] font-black px-2 py-1 rounded-lg bg-slate-100 text-slate-400";
         }
-
         function copy(id) {
             const t = document.getElementById(`res-${id}`);
             if(!t || !t.value) return;
@@ -226,15 +194,12 @@
             btn.textContent = "복사됨";
             setTimeout(() => btn.textContent = "복사", 1000);
         }
-
         function exportCSV() {
             let csv = "\uFEFF이름,행동특성및종합의견\n";
             const count = document.getElementById('studentCount').value;
             for(let i = 1; i <= count; i++) {
-                const nameInput = document.getElementById(`name-${i}`);
-                const resInput = document.getElementById(`res-${i}`);
-                const n = (nameInput && nameInput.value) ? nameInput.value : `학생${i}`;
-                const r = (resInput && resInput.value) ? resInput.value.replace(/"/g, '""') : "";
+                const n = document.getElementById(`name-${i}`).value || `학생${i}`;
+                const r = document.getElementById(`res-${i}`).value.replace(/"/g, '""');
                 csv += `"${n}","${r}"\n`;
             }
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -243,7 +208,6 @@
             link.download = `생기부_작성_${new Date().toLocaleDateString()}.csv`;
             link.click();
         }
-
         window.onload = createForms;
     </script>
 </body>
