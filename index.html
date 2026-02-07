@@ -3,231 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>생기부 행발 지능형 생성기</title>
+    <title>생기부 하이퍼-콤비네이션 엔진</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #f0f4f8; color: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .student-card { transition: transform 0.2s, box-shadow 0.2s; }
-        .student-card:hover { transform: translateY(-3px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.05); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .card-anim { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-anim:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .generating { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
     </style>
 </head>
-<body class="antialiased text-slate-900">
-    <div class="max-w-7xl mx-auto px-4 py-8 md:py-12">
-        <!-- Header -->
-        <header class="mb-10 bg-white p-6 md:p-10 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-center gap-8">
-            <div class="text-center lg:text-left">
-                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 flex items-center justify-center lg:justify-start gap-3">
-                    <span class="p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-200 text-white">✍️</span> 지능형 행발 생성기
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Dashboard Header -->
+        <div class="bg-white rounded-[2.5rem] p-8 mb-8 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 leading-tight">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">10만+ 유니크</span><br>행발 조합 엔진 v4.4
                 </h1>
-                <p class="mt-3 text-slate-500 font-medium">관찰 기록을 분석하여 <span class="text-blue-600 font-bold">400~500자</span> 최적 분량으로 완성합니다.</p>
+                <p class="text-slate-500 mt-2 font-medium">부정 표현 순화 및 실시간 개별 관찰 내용 반영 시스템</p>
             </div>
-            <div class="flex flex-wrap justify-center items-center gap-4 p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100">
-                <div class="flex items-center gap-3 pr-4 border-r border-slate-200">
-                    <label class="text-sm font-bold text-slate-600">인원 설정</label>
-                    <select id="student-count" onchange="initForms()" class="bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500 transition-all outline-none">
-                        <option value="5">5명</option>
-                        <option value="10">10명</option>
-                        <option value="20" selected>20명</option>
-                        <option value="30">30명</option>
+            <div class="flex flex-wrap gap-3 bg-slate-50 p-4 rounded-3xl border border-slate-100">
+                <div class="flex items-center gap-2 px-3 border-r border-slate-200">
+                    <span class="text-xs font-bold text-slate-400 uppercase">인원</span>
+                    <select id="studentCount" onchange="createForms()" class="bg-transparent font-bold text-blue-600 outline-none">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="30">30</option>
+                        <option value="35">35</option>
+                        <option value="40">40</option>
                     </select>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="processAll()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-md active:scale-95 transition-all flex items-center gap-2">
-                        <span>일괄 생성</span>
-                    </button>
-                    <button onclick="exportToCSV()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold shadow-md active:scale-95 transition-all">
-                        엑셀 저장
-                    </button>
-                </div>
+                <button onclick="generateAll()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-blue-100">일괄 생성</button>
+                <button onclick="exportCSV()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2.5 rounded-2xl font-bold transition-all active:scale-95">CSV 추출</button>
             </div>
-        </header>
+        </div>
 
-        <!-- Main Grid -->
-        <div id="grid-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        <!-- Cards Container -->
+        <div id="container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </div>
 
-    <!-- Loading Overlay -->
-    <div id="loading" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md hidden z-50 flex flex-col items-center justify-center text-white">
-        <div class="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="font-bold text-lg">문맥을 정밀 분석하는 중...</p>
+    <!-- Processing Modal -->
+    <div id="loader" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex flex-col items-center justify-center z-50">
+        <div class="bg-white p-10 rounded-[3rem] shadow-2xl flex flex-col items-center">
+            <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-6"></div>
+            <h2 class="text-xl font-black text-slate-800">대규모 조합 연산 중</h2>
+            <p class="text-slate-500 mt-2">개별 관찰 내용 분석 및 문장 재구성 알고리즘 가동 중...</p>
+        </div>
     </div>
 
     <script>
-        /* --- Database & Keywords --- */
-        const DATA = {
-            "공동체": [
-                "매사에 예의가 바르고 웃어른을 공경하며 학급 내에서 타의 모범이 되는 생활 태도를 일관되게 유지함.",
-                "타인의 의견을 경청하고 공감하는 능력이 뛰어나며 친구들의 고민을 진지하게 들어주는 조력자임.",
-                "자신의 이익보다 학급 전체의 화합과 발전을 먼저 생각하며 갈등 상황에서 중재자 역할을 수행함.",
-                "학급 내 소외된 친구에게 먼저 다가가 스스럼없이 어울리며 공동체 의식을 몸소 실천하는 학생임.",
-                "학교 규칙을 철저히 준수하며 공공기물을 아끼고 보존하는 일에 앞장서서 실천하는 태도를 견지함."
-            ],
-            "학습": [
-                "교과 내용에 대한 지적 호기심이 왕성하며 원리 이해를 바탕으로 지식을 확장하려는 탐구적 태도가 돋보임.",
-                "수업 시간 집중력이 매우 높으며 교사의 질문에 핵심을 꿰뚫는 답변을 제시하여 학습 분위기를 주도함.",
-                "자신만의 체계적인 학습 계획을 수립하고 이를 꾸준히 실천하는 등 고도의 자기관리 능력을 발휘함.",
-                "독서량이 풍부하여 인문, 사회, 과학 등 다방면의 지식을 융합하여 새로운 관점에서 생각하는 능력이 탁월함.",
-                "어려운 문제 상황에서도 포기하지 않고 끝까지 해결책을 찾아내려는 인내심과 학구열을 지니고 있음."
-            ],
-            "소통": [
-                "모둠 활동 시 팀원들의 의견을 조화롭게 조율하며 공동 목표 달성을 위해 자신의 역할을 충실히 수행함.",
-                "자신의 주장만을 내세우기보다 상대방의 관점을 존중하고 합리적인 타협점을 찾아가는 소통 역량이 우수함.",
-                "프로젝트 수행 과정에서 창의적인 아이디어를 제안하고 팀워크를 저해하는 요소를 사전에 파악하여 대처함.",
-                "상대방의 언어뿐만 아니라 비언어적 표현까지 살피며 공감을 바탕으로 한 깊이 있는 대화 기법을 구사함.",
-                "자신의 지식이나 기술을 팀원들과 나누는 것을 즐기며 함께 성장하는 공동체적 가치를 중요하게 여김."
-            ],
-            "리더십": [
-                "학급 임원으로서 투철한 책임감을 발휘하여 학급의 대소사를 빈틈없이 챙기며 구성원들의 신망이 두터움.",
-                "남들이 기피하는 일을 먼저 시작하여 자연스럽게 친구들의 동참을 이끌어내는 솔선수범형 리더십을 보여줌.",
-                "학급의 목표가 설정되면 이를 구체화하기 위한 세부 계획을 수립하고 참여를 독려하는 추진력이 강력함.",
-                "자치 회의를 민주적으로 진행하며 소수 의견까지 수렴하여 모두가 만족하는 합리적인 의사결정을 이끌어냄.",
-                "부드러운 카리스마로 학급 분위기를 환기시키며 친구들에게 긍정적인 영향력을 미치는 리더 자질이 있음."
-            ]
-        };
+        const REFINEMENT_MAP = [
+            { patterns: ["산만", "집중못함", "떠듦"], replacement: "주변 상황에 민감하게 반응하며 다방면에 왕성한 호기심을 보임" },
+            { patterns: ["소극", "자신감부족", "말수적음"], replacement: "신중한 태도로 상황을 관조하며 내면의 생각을 깊이 있게 정리하는 성찰적 태도를 지님" },
+            { patterns: ["고집", "이기적", "독단"], replacement: "자신의 주관이 뚜렷하고 목표를 향한 의지가 강하여 주도적으로 일을 추진하는 역량이 돋보임" },
+            { patterns: ["공부안함", "성적낮음", "학습의욕부족"], replacement: "현재의 성취보다는 미래의 가능성에 잠재력을 품고 있으며 적절한 동기 부여 시 비약적인 성장이 기대됨" },
+            { patterns: ["싸움", "공격적", "다툼"], replacement: "감정 표현에 솔직하고 활동적인 에너지가 강하여 이를 긍정적인 방향으로 분출할 수 있는 리더십 잠재력을 가짐" },
+            { patterns: ["느림", "지각", "태만"], replacement: "매사에 서두르지 않고 자신만의 속도로 과업을 완수하려는 꼼꼼함과 여유로운 태도를 갖춤" },
+            { patterns: ["불평", "불만"], replacement: "비판적 사고력이 예리하여 현상의 문제점을 파악하는 능력이 있고 이를 개선하려는 의지가 엿보임" }
+        ];
 
-        const KEYWORDS = {
-            "공동체": ["친구", "도움", "배려", "예의", "봉사", "규칙", "착한", "친절"],
-            "학습": ["수업", "지적", "공부", "탐구", "문제", "독서", "집중", "학구"],
-            "소통": ["모둠", "팀원", "의견", "경청", "대화", "조율", "협력", "공감"],
-            "리더십": ["임원", "책임", "반장", "솔선", "카리스마", "회의", "주도", "계획"]
-        };
-
-        /* --- Helper Functions --- */
-        const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
-        const randomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-        const analyzeCategory = (text) => {
-            if (!text) return "학습";
-            const scores = { "공동체": 0, "학습": 0, "소통": 0, "리더십": 0 };
-            for (const cat in KEYWORDS) {
-                KEYWORDS[cat].forEach(kw => {
-                    if (text.includes(kw)) scores[cat]++;
-                });
+        const ELEMENTS = {
+            "공동체": {
+                "adj": ["이타적인 마음으로", "공동체 의식이 남달라", "학급의 화합을 위해", "배려심이 깊고 따뜻하여", "성숙한 시민 의식을 바탕으로", "타인을 존중하는 태도로", "봉사 정신이 투철하여", "화목한 분위기를 위해"],
+                "act": ["소외된 교우를 세심하게 살피며", "어려운 상황을 묵묵히 해결하고", "학교 규칙을 모범적으로 준수하며", "청소 및 환경 정돈에 앞장서고", "웃어른께 예의 바르게 행동하며", "학급 내 갈등 상황을 중재하고"],
+                "res": ["모두의 신뢰를 받는 기둥이 됨", "화합의 매개체 역할을 완벽히 수행함", "긍정적인 에너지를 주변에 전파함", "타의 모범이 되는 생활 습관을 보여줌", "건전한 학급 문화 조성에 크게 기여함"],
+                "end": ["유지함.", "견지함.", "돋보임.", "실천함.", "보여줌."]
+            },
+            "학습": {
+                "adj": ["지적 호기심이 무척 왕성하여", "자기주도적 역량이 뛰어나", "학구적인 열의가 매우 높아", "분석적 사고력이 탁월하여", "끈기 있는 탐구 자세를 갖추어", "기초가 탄탄하고 집중력이 좋아", "학업적 성취 의욕이 강력하여"],
+                "act": ["수업 시간마다 핵심을 꿰뚫는 질문을 던지고", "자신만의 학습 노하우를 체계화하며", "다양한 도서를 통해 지식의 폭을 확장하고", "어려운 문제도 포기하지 않고 끝까지 연구하며", "교과 간 융합 사고를 실천하고"],
+                "res": ["지속적인 학업 발전을 이끌어냄", "깊이 있는 학문적 통찰력을 발휘함", "미래 성장 가능성이 매우 높음을 보여줌", "사고의 유연성과 논리성을 입증함", "교내 학습 분위기 조성에 긍정적 영향을 줌"],
+                "end": ["기대됨.", "보여줌.", "판단됨.", "나타남.", "탁월함."]
+            },
+            "소통": {
+                "adj": ["개방적인 소통 태도를 지녀", "공감 능력이 매우 우수하여", "협력적인 자세가 몸에 배어", "자신의 의사를 논리적으로 표현하며", "경청의 가치를 잘 알고 있어"],
+                "act": ["모둠 활동 시 팀원들을 조화롭게 이끌고", "반대 의견도 수용하며 합의점을 도출하고", "적극적인 의사표현으로 소통의 창구가 되며", "동료들의 장점을 파악하여 격려하고", "토론 과정에서 합리적인 근거를 제시하며"],
+                "res": ["협동의 시너지를 극대화함", "유연한 대인관계를 형성함", "원만한 조직 운영에 핵심적 역할을 함", "신뢰를 기반으로 한 관계를 구축함", "민주적인 의사결정 과정을 실천함"],
+                "end": ["훌륭함.", "돋보임.", "인상적임.", "실천함.", "발휘함."]
             }
-            return Object.keys(scores).reduce((a, b) => scores[a] >= scores[b] ? a : b);
         };
 
-        /* --- Core Logic --- */
-        const initForms = () => {
-            const count = document.getElementById('student-count').value;
-            const container = document.getElementById('grid-container');
+        const KEY_MAP = {
+            "공동체": ["배려", "봉사", "예의", "친구", "화합", "인사", "청소"],
+            "학습": ["수업", "지식", "탐구", "문제", "학업", "공부", "질문"],
+            "소통": ["모둠", "팀", "대화", "경청", "발표", "토론", "의견"]
+        };
+
+        function random(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+        function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+        function buildSentence(cat) {
+            const d = ELEMENTS[cat];
+            return `${random(d.adj)} ${random(d.act)} ${random(d.res)} ${random(d.end)}`;
+        }
+
+        function refineText(text) {
+            let refined = text;
+            REFINEMENT_MAP.forEach(item => {
+                item.patterns.forEach(p => {
+                    const regex = new RegExp(p, 'gi');
+                    if (regex.test(refined)) {
+                        refined = refined.replace(regex, item.replacement);
+                    }
+                });
+            });
+            return refined;
+        }
+
+        function createForms() {
+            const count = document.getElementById('studentCount').value;
+            const container = document.getElementById('container');
             container.innerHTML = '';
             for (let i = 1; i <= count; i++) {
-                const div = document.createElement('div');
-                div.className = "student-card bg-white p-6 rounded-[1.5rem] border border-slate-200 animate-fade-in";
-                div.innerHTML = `
-                    <div class="flex justify-between items-center mb-4">
+                const card = document.createElement('div');
+                card.className = "card-anim bg-white rounded-[2rem] p-6 border border-slate-200 animate-fade-in flex flex-col gap-4";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
                         <div class="flex items-center gap-3">
-                            <span class="bg-slate-800 text-white w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold">${i}</span>
-                            <input type="text" id="name-${i}" placeholder="이름" class="text-lg font-bold outline-none border-b-2 border-transparent focus:border-blue-500 w-24">
+                            <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black">${i}</span>
+                            <input id="name-${i}" placeholder="이름" class="text-lg font-bold outline-none border-b-2 border-transparent focus:border-blue-400 w-24">
                         </div>
-                        <span id="badge-${i}" class="text-[10px] font-bold px-2 py-1 rounded-md bg-slate-100 text-slate-400">
-                            <span id="char-${i}">0</span> / 500자
-                        </span>
+                        <div id="counter-${i}" class="text-[10px] font-black px-2 py-1 rounded-lg bg-slate-100 text-slate-400"><span id="val-${i}">0</span> / 500</div>
                     </div>
-                    <div class="mb-4">
-                        <textarea id="obs-${i}" class="w-full h-16 p-3 text-xs bg-blue-50/50 border border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none resize-none custom-scrollbar" placeholder="선생님의 관찰 내용을 자유롭게 입력하세요..."></textarea>
+                    <textarea id="obs-${i}" oninput="handleObsInput(${i})" class="w-full h-16 p-3 text-xs bg-slate-50 border border-slate-100 rounded-2xl outline-none resize-none focus:ring-2 focus:ring-blue-100 transition-all custom-scrollbar" placeholder="교사가 개별적으로 관찰한 내용을 추가합니다."></textarea>
+                    <div class="flex gap-2">
+                        <button onclick="generate(${i})" class="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-600 py-2.5 rounded-2xl text-[11px] font-black transition-all">랜덤 다시 조합</button>
+                        <button onclick="copy(${i})" id="copy-${i}" class="px-5 bg-slate-50 text-slate-500 py-2.5 rounded-2xl text-[11px] font-bold hover:bg-slate-200 transition-all">복사</button>
                     </div>
-                    <div class="flex gap-2 mb-3">
-                        <button onclick="generateOne(${i})" class="flex-1 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white py-2 rounded-xl text-[11px] font-bold transition-all">스마트 생성</button>
-                        <button onclick="copy(${i})" id="copy-btn-${i}" class="px-4 bg-slate-50 text-slate-500 py-2 rounded-xl text-[11px] font-bold hover:bg-slate-200 transition-all">복사</button>
-                    </div>
-                    <textarea id="final-${i}" oninput="updateCounter(${i})" class="w-full h-40 p-4 text-sm bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none resize-none custom-scrollbar leading-relaxed" placeholder="생성된 문장이 여기에 표시됩니다."></textarea>
+                    <textarea id="res-${i}" oninput="update(${i})" class="w-full h-44 p-4 text-sm bg-slate-50 border border-slate-100 rounded-2xl outline-none resize-none custom-scrollbar leading-relaxed" placeholder="관찰 내용이 반영된 긍정적인 행발 문장이 여기에 표시됩니다."></textarea>
                 `;
-                container.appendChild(div);
+                container.appendChild(card);
             }
-        };
+        }
 
-        const generateOne = (id) => {
-            const obs = document.getElementById(`obs-${id}`).value.trim();
-            const mainCat = analyzeCategory(obs);
-            const formattedObs = obs ? (obs.endsWith('.') ? obs : obs + ".") : "";
+        let inputTimers = {};
+        function handleObsInput(id) {
+            clearTimeout(inputTimers[id]);
+            inputTimers[id] = setTimeout(() => {
+                generate(id);
+            }, 500);
+        }
+
+        function generate(id) {
+            const obsField = document.getElementById(`obs-${id}`);
+            const resField = document.getElementById(`res-${id}`);
+            if(!obsField || !resField) return;
+
+            let rawObs = obsField.value.trim();
+            let refinedObs = refineText(rawObs);
+            const fObs = refinedObs ? (refinedObs.endsWith('.') ? refinedObs : refinedObs + ".") : "";
+
+            let target = "학습";
+            let maxScore = -1;
             
-            let pool = [];
-            Object.keys(DATA).forEach(cat => {
-                let items = shuffle(DATA[cat]).slice(0, 2);
-                if (cat === mainCat && formattedObs) {
-                    items.splice(1, 0, formattedObs); // 문맥 중간에 삽입
+            for(let c in KEY_MAP) {
+                let score = 0;
+                KEY_MAP[c].forEach(k => { if(rawObs.includes(k)) score++; });
+                if(score > maxScore) { maxScore = score; target = c; }
+            }
+
+            let combined = [];
+            Object.keys(ELEMENTS).forEach(c => {
+                let s = buildSentence(c);
+                if(c === target && fObs) {
+                    const parts = s.split(' ');
+                    const splitIdx = Math.floor(parts.length / 3);
+                    s = parts.slice(0, splitIdx).join(' ') + " " + fObs + " " + parts.slice(splitIdx).join(' ');
                 }
-                pool.push(items.join(" "));
+                combined.push(s);
             });
 
-            let finalStr = shuffle(pool).join(" ");
-
-            // 최소 400자 충족을 위한 보충
-            while (finalStr.length < 420) {
-                const extra = randomItem(DATA[randomItem(Object.keys(DATA))]);
-                if (!finalStr.includes(extra)) finalStr += " " + extra;
+            let final = shuffle(combined).join(" ");
+            
+            while (final.length < 410) {
+                final += " " + buildSentence(random(Object.keys(ELEMENTS)));
             }
 
-            // 500자 엄격 제한
-            if (finalStr.length > 500) {
-                finalStr = finalStr.substring(0, 500);
-                const lastIdx = finalStr.lastIndexOf('.');
-                if (lastIdx > 380) finalStr = finalStr.substring(0, lastIdx + 1);
+            if (final.length > 500) {
+                final = final.substring(0, 500);
+                const lastDot = final.lastIndexOf('.');
+                final = lastDot > 300 ? final.substring(0, lastDot + 1) : final;
             }
 
-            const field = document.getElementById(`final-${id}`);
-            field.value = finalStr;
-            updateCounter(id);
-        };
+            resField.value = final.replace(/\s+/g, ' ').trim();
+            update(id);
+        }
 
-        const processAll = () => {
-            document.getElementById('loading').classList.remove('hidden');
+        function generateAll() {
+            document.getElementById('loader').classList.remove('hidden');
             setTimeout(() => {
-                const count = document.getElementById('student-count').value;
-                for(let i=1; i<=count; i++) generateOne(i);
-                document.getElementById('loading').classList.add('hidden');
+                const count = document.getElementById('studentCount').value;
+                for(let i = 1; i <= count; i++) { generate(i); }
+                document.getElementById('loader').classList.add('hidden');
             }, 800);
-        };
+        }
 
-        const updateCounter = (id) => {
-            const len = document.getElementById(`final-${id}`).value.length;
-            const charSpan = document.getElementById(`char-${id}`);
-            const badge = document.getElementById(`badge-${id}`);
-            charSpan.textContent = len;
+        function update(id) {
+            const resField = document.getElementById(`res-${id}`);
+            const valSpan = document.getElementById(`val-${id}`);
+            const badge = document.getElementById(`counter-${id}`);
+            if(!resField || !valSpan || !badge) return;
 
-            if (len >= 500) {
-                badge.className = "text-[10px] font-bold px-2 py-1 rounded-md bg-red-500 text-white";
-            } else if (len >= 400) {
-                badge.className = "text-[10px] font-bold px-2 py-1 rounded-md bg-blue-500 text-white";
-            } else {
-                badge.className = "text-[10px] font-bold px-2 py-1 rounded-md bg-slate-100 text-slate-400";
-            }
-        };
+            const len = resField.value.length;
+            valSpan.textContent = len;
 
-        const copy = (id) => {
-            const text = document.getElementById(`final-${id}`);
-            if (!text.value) return;
-            text.select();
+            if(len >= 500) badge.className = "text-[10px] font-black px-2 py-1 rounded-lg bg-red-500 text-white";
+            else if(len >= 400) badge.className = "text-[10px] font-black px-2 py-1 rounded-lg bg-blue-600 text-white";
+            else badge.className = "text-[10px] font-black px-2 py-1 rounded-lg bg-slate-100 text-slate-400";
+        }
+
+        function copy(id) {
+            const t = document.getElementById(`res-${id}`);
+            if(!t || !t.value) return;
+            t.select();
             document.execCommand('copy');
-            const btn = document.getElementById(`copy-btn-${id}`);
-            btn.textContent = "완료";
+            const btn = document.getElementById(`copy-${id}`);
+            btn.textContent = "복사됨";
             setTimeout(() => btn.textContent = "복사", 1000);
-        };
+        }
 
-        const exportToCSV = () => {
-            const count = document.getElementById('student-count').value;
-            let csv = "\uFEFF번호,이름,종합의견\n";
-            for (let i = 1; i <= count; i++) {
-                const name = document.getElementById(`name-${i}`).value || `학생${i}`;
-                const opinion = document.getElementById(`final-${i}`).value.replace(/"/g, '""');
-                csv += `${i},"${name}","${opinion}"\n`;
+        function exportCSV() {
+            let csv = "\uFEFF이름,행동특성및종합의견\n";
+            const count = document.getElementById('studentCount').value;
+            for(let i = 1; i <= count; i++) {
+                const nameInput = document.getElementById(`name-${i}`);
+                const resInput = document.getElementById(`res-${i}`);
+                const n = (nameInput && nameInput.value) ? nameInput.value : `학생${i}`;
+                const r = (resInput && resInput.value) ? resInput.value.replace(/"/g, '""') : "";
+                csv += `"${n}","${r}"\n`;
             }
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `생기부_행발_작성_${new Date().toLocaleDateString()}.csv`;
+            link.download = `생기부_작성_${new Date().toLocaleDateString()}.csv`;
             link.click();
-        };
+        }
 
-        window.onload = initForms;
+        window.onload = createForms;
     </script>
 </body>
 </html>
