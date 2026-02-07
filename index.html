@@ -19,9 +19,9 @@
         <div class="bg-white rounded-[2.5rem] p-8 mb-8 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
                 <h1 class="text-3xl font-black text-slate-900 leading-tight">
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">10만+ 유니크</span><br>행발 조합 엔진 v4.5
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">10만+ 유니크</span><br>행발 조합 엔진 v4.6
                 </h1>
-                <p class="text-slate-500 mt-2 font-medium">음슴체 종결어미 최적화 및 중복 방지 시스템</p>
+                <p class="text-slate-500 mt-2 font-medium">음슴체 종결어미 및 안정성 강화 시스템</p>
             </div>
             <div class="flex flex-wrap gap-3 bg-slate-50 p-4 rounded-3xl border border-slate-100">
                 <div class="flex items-center gap-2 px-3 border-r border-slate-200">
@@ -44,11 +44,10 @@
         <div class="bg-white p-10 rounded-[3rem] shadow-2xl flex flex-col items-center">
             <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-6"></div>
             <h2 class="text-xl font-black text-slate-800">문장 재구성 중</h2>
-            <p class="text-slate-500 mt-2">어색한 종결 어미 및 중복 표현 필터링 중...</p>
+            <p class="text-slate-500 mt-2">안정적인 데이터 처리 중...</p>
         </div>
     </div>
     <script>
-        // 음슴체 최적화 데이터 (중복 방지를 위해 서술어 다양화)
         const ELEMENTS = {
             "공동체": {
                 "adj": ["이타적인 마음으로", "공동체 의식이 남다름.", "학급 화합을 위해 노력함.", "배려심이 깊고 따뜻함.", "성숙한 시민 의식을 갖춤.", "타인을 존중하는 태도를 보임.", "봉사 정신이 투철함.", "화목한 분위기 형성에 기여함."],
@@ -89,7 +88,6 @@
                     if (regex.test(refined)) refined = refined.replace(regex, item.replacement);
                 });
             });
-            // 음슴체 변환 시도 (문장의 끝이 다, 요 로 끝나면 함/임으로 변환)
             refined = refined.replace(/합니다\./g, "함.").replace(/입니다\./g, "임.").replace(/한다\./g, "함.").replace(/이다\./g, "임.");
             return refined;
         }
@@ -98,8 +96,9 @@
             const container = document.getElementById('container');
             container.innerHTML = '';
             for (let i = 1; i <= count; i++) {
-                container.innerHTML += `
-                <div class="card-anim bg-white rounded-[2rem] p-6 border border-slate-200 flex flex-col gap-4">
+                const card = document.createElement('div');
+                card.className = "card-anim bg-white rounded-[2rem] p-6 border border-slate-200 flex flex-col gap-4";
+                card.innerHTML = `
                     <div class="flex justify-between items-center">
                         <div class="flex items-center gap-3">
                             <span class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black">${i}</span>
@@ -107,13 +106,17 @@
                         </div>
                         <div id="counter-${i}" class="text-[10px] font-black px-2 py-1 rounded-lg bg-slate-100 text-slate-400"><span id="val-${i}">0</span> / 500</div>
                     </div>
-                    <textarea id="obs-${i}" oninput="handleObsInput(${i})" class="w-full h-16 p-3 text-xs bg-slate-50 border border-slate-100 rounded-2xl outline-none resize-none focus:ring-2 focus:ring-indigo-100 transition-all custom-scrollbar" placeholder="교사가 개별적으로 관찰한 내용을 추가합니다."></textarea>
+                    <textarea id="obs-${i}" class="obs-input w-full h-16 p-3 text-xs bg-slate-50 border border-slate-100 rounded-2xl outline-none resize-none focus:ring-2 focus:ring-indigo-100 transition-all custom-scrollbar" placeholder="교사가 개별적으로 관찰한 내용을 추가합니다."></textarea>
                     <div class="flex gap-2">
                         <button onclick="generate(${i})" class="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 py-2.5 rounded-2xl text-[11px] font-black transition-all">랜덤 다시 조합</button>
                         <button onclick="copy(${i})" id="copy-${i}" class="px-5 bg-slate-50 text-slate-500 py-2.5 rounded-2xl text-[11px] font-bold hover:bg-slate-200 transition-all">복사</button>
                     </div>
                     <textarea id="res-${i}" oninput="update(${i})" class="w-full h-44 p-4 text-sm bg-slate-50 border border-slate-100 rounded-2xl outline-none resize-none custom-scrollbar leading-relaxed" placeholder="음슴체로 정제된 행발 문장이 표시됨."></textarea>
-                </div>`;
+                `;
+                container.appendChild(card);
+                // 이벤트 리스너를 직접 할당하여 안전성 강화
+                const obsEl = card.querySelector(`#obs-${i}`);
+                obsEl.addEventListener('input', () => handleObsInput(i));
             }
         }
         let inputTimers = {};
@@ -138,28 +141,28 @@
             let combined = [];
             Object.keys(ELEMENTS).forEach(c => {
                 const category = ELEMENTS[c];
-                // 각 영역별 중복 방지 로직
-                const adj = random(category.adj);
-                const act = random(category.act);
-                const res = random(category.res);
+                let adj = random(category.adj);
+                let act = random(category.act);
+                let res = random(category.res);
                 let s = `${adj} ${act} ${res}`;
                 if(c === target && refinedObs) {
-                    const mid = Math.floor(s.split(' ').length / 2);
                     const words = s.split(' ');
+                    const mid = Math.floor(words.length / 2);
                     s = words.slice(0, mid).join(' ') + " " + refinedObs + " " + words.slice(mid).join(' ');
                 }
                 combined.push(s);
             });
             let final = shuffle(combined).join(" ");
-            // 글자 수 보충 시 중복 문장 방지
-            while (final.length < 430) {
+            // 글자 수 보충 시 무한 루프 방지 및 안전한 추가
+            let attempts = 0;
+            while (final.length < 430 && attempts < 10) {
                 let extraCat = random(Object.keys(ELEMENTS));
                 let extraSentence = random(ELEMENTS[extraCat].res);
-                if (!final.includes(extraSentence.substring(0, 10))) {
+                if (!final.includes(extraSentence.substring(0, 15))) {
                     final += " " + extraSentence;
                 }
+                attempts++;
             }
-            // 문장 종결 및 중복 어미 처리
             final = final.replace(/\.\s\./g, ".").replace(/\s+/g, ' ').trim();
             if (final.length > 500) {
                 final = final.substring(0, 500);
@@ -170,15 +173,18 @@
             update(id);
         }
         function generateAll() {
-            document.getElementById('loader').classList.remove('hidden');
+            const loader = document.getElementById('loader');
+            loader.classList.remove('hidden');
             setTimeout(() => {
                 const count = document.getElementById('studentCount').value;
                 for(let i = 1; i <= count; i++) generate(i);
-                document.getElementById('loader').classList.add('hidden');
-            }, 800);
+                loader.classList.add('hidden');
+            }, 500);
         }
         function update(id) {
-            const len = document.getElementById(`res-${id}`).value.length;
+            const resField = document.getElementById(`res-${id}`);
+            if(!resField) return;
+            const len = resField.value.length;
             document.getElementById(`val-${id}`).textContent = len;
             const badge = document.getElementById(`counter-${id}`);
             if(len >= 500) badge.className = "text-[10px] font-black px-2 py-1 rounded-lg bg-red-500 text-white";
@@ -198,9 +204,9 @@
             let csv = "\uFEFF이름,행동특성및종합의견\n";
             const count = document.getElementById('studentCount').value;
             for(let i = 1; i <= count; i++) {
-                const n = document.getElementById(`name-${i}`).value || `학생${i}`;
-                const r = document.getElementById(`res-${i}`).value.replace(/"/g, '""');
-                csv += `"${n}","${r}"\n`;
+                const nameVal = document.getElementById(`name-${i}`).value || `학생${i}`;
+                const resVal = document.getElementById(`res-${i}`).value.replace(/"/g, '""');
+                csv += `"${nameVal}","${resVal}"\n`;
             }
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
